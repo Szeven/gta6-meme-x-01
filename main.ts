@@ -1,14 +1,16 @@
-// gta6-meme-x-01 entry program (Node 22, standard library only).
-// It copies POST.json from the repository into the output directory.
-// The house reads the X post itself from the URL in that file.
-import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "out";
-mkdirSync(outDir, { recursive: true });
-const post = JSON.parse(readFileSync("POST.json", "utf8"));
+const here = dirname(fileURLToPath(import.meta.url));
+const src = join(here, "POST.json");
+const text = readFileSync(src, "utf8");
+const post = JSON.parse(text);
 if (typeof post.url !== "string" || !post.url.startsWith("https://")) {
-  throw new Error("POST.json must hold an https post url");
+  throw new Error("POST.json: post.url must be an https URL string");
 }
-copyFileSync("POST.json", join(outDir, "POST.json"));
-console.log("POST.json -> " + join(outDir, "POST.json"));
+const outDir = process.env.MAKEFUN_OUTPUT_DIR || "out";
+mkdirSync(outDir, { recursive: true });
+const outPath = join(outDir, "POST.json");
+writeFileSync(outPath, text);
+console.log(`POST.json -> ${outPath}`);
